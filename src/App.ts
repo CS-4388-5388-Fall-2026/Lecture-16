@@ -5,12 +5,19 @@
  */ 
 
 import * as gfx from 'gophergfx'
+import { GUI } from 'dat.gui'
 import { RobotArm } from './RobotArm';
 
 export class App extends gfx.GfxApp
 {
     private cameraControls: gfx.OrbitControls;
     private robotArm: RobotArm;
+
+    public upperArmRotate: number;
+    public upperArmBend: number;
+    public middleArmBend: number;
+    public lowerArmBend: number;
+    public endEffectorBend: number;
 
     // --- Create the App class ---
     constructor()
@@ -20,6 +27,13 @@ export class App extends gfx.GfxApp
 
         this.cameraControls = new gfx.OrbitControls(this.camera);
         this.robotArm = new RobotArm();
+
+        this.upperArmRotate = 0;
+        this.upperArmBend = 0;
+        this.middleArmBend = 0;
+        this.lowerArmBend = 0;
+        this.endEffectorBend = 0;
+
     }
 
 
@@ -69,6 +83,60 @@ export class App extends gfx.GfxApp
         this.robotArm.createHierarchy();
         this.robotArm.createGeometry();
         this.scene.add(this.robotArm);
+
+        // Create the GUI
+        const gui = new GUI();
+
+        const upperArmControls = gui.addFolder('Upper Arm Controls');
+        upperArmControls.open();
+
+        const upperYController = upperArmControls.add(this, 'upperArmRotate', -180, 180);
+        upperYController.name('rotate');
+        upperYController.onChange((value: number) => { 
+            const bendRotation = gfx.Quaternion.makeRotationZ(gfx.MathUtils.degreesToRadians(this.upperArmBend));
+            const rotation = gfx.Quaternion.makeRotationY(gfx.MathUtils.degreesToRadians(this.upperArmRotate));
+            this.robotArm.setJointRotation('upperArm', gfx.Quaternion.multiply(rotation, bendRotation));
+        });
+
+        const upperZController = upperArmControls.add(this, 'upperArmBend', -45, 45);
+        upperZController.name('bend');
+        upperZController.onChange((value: number) => { 
+            const bendRotation = gfx.Quaternion.makeRotationZ(gfx.MathUtils.degreesToRadians(this.upperArmBend));
+            const rotation = gfx.Quaternion.makeRotationY(gfx.MathUtils.degreesToRadians(this.upperArmRotate));
+            this.robotArm.setJointRotation('upperArm', gfx.Quaternion.multiply(rotation, bendRotation));
+         });
+
+        const middleArmControls = gui.addFolder('Middle Arm Controls');
+        middleArmControls.open();
+
+        const middleZController = middleArmControls.add(this, 'middleArmBend', -135, 135);
+        middleZController.name('bend');
+        middleZController.onChange((value: number) => { 
+            const rotation = gfx.Quaternion.makeRotationZ(gfx.MathUtils.degreesToRadians(this.middleArmBend));
+            this.robotArm.setJointRotation('middleArm', rotation);
+        });
+
+        const lowerArmControls = gui.addFolder('Lower Arm Controls');
+        lowerArmControls.open();
+
+        const lowerZController = lowerArmControls.add(this, 'lowerArmBend', -135, 135);
+        lowerZController.name('bend');
+        lowerZController.onChange((value: number) => { 
+            const rotation = gfx.Quaternion.makeRotationZ(gfx.MathUtils.degreesToRadians(this.lowerArmBend));
+            this.robotArm.setJointRotation('lowerArm', rotation);
+         });
+
+         const endEffectorControls = gui.addFolder('End Effector Controls');
+         endEffectorControls.open();
+ 
+         const endEffectorXController = endEffectorControls.add(this, 'endEffectorBend', -90, 90);
+         endEffectorXController.name('bend');
+         endEffectorXController.onChange((value: number) => { 
+             const rotation = gfx.Quaternion.makeRotationY(gfx.MathUtils.degreesToRadians(this.endEffectorBend));
+             this.robotArm.setJointRotation('endEffector', rotation);
+          });
+
+
     }
 
     
